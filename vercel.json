@@ -1,0 +1,6 @@
+{
+    "name": "lets-volei",
+    "framework": "vite",
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist"
+}
