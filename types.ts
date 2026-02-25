@@ -64,4 +64,15 @@ export interface Payment {
   created_at?: string;
 }
 
+export interface CashTransaction {
+  id: string;
+  user_id: string;
+  amount: number;
+  description: string;
+  category: string;
+  type: 'deposit' | 'withdrawal';
+  date: string;
+  created_at?: string;
+}
+
 export type ViewType = 'players' | 'draw' | 'stats' | 'settings' | 'profile' | 'download' | 'finance';
