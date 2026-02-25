@@ -51,6 +51,8 @@ export interface UserProfile {
   bio: string;
   age?: number;
   phone?: string;
+}
+
 export interface Payment {
   id: string;
   player_id: string;
