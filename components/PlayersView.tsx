@@ -7,10 +7,11 @@ interface PlayersViewProps {
   players: Player[];
   onAddClick: () => void;
   onRemove: (id: string) => void;
+  onEdit: (player: Player) => void;
   loading?: boolean;
 }
 
-const PlayersView: React.FC<PlayersViewProps> = ({ players, onAddClick, onRemove, loading }) => {
+const PlayersView: React.FC<PlayersViewProps> = ({ players, onAddClick, onRemove, onEdit, loading }) => {
   const [search, setSearch] = useState('');
 
   const filteredPlayers = players.filter(p =>
@@ -63,7 +64,7 @@ const PlayersView: React.FC<PlayersViewProps> = ({ players, onAddClick, onRemove
           </div>
         ) : filteredPlayers.length > 0 ? (
           filteredPlayers.map(player => (
-            <PlayerCard key={player.id} player={player} onRemove={onRemove} />
+            <PlayerCard key={player.id} player={player} onRemove={onRemove} onEdit={onEdit} />
           ))
         ) : (
           <div className="py-12 text-center">

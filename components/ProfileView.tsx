@@ -38,7 +38,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ onBack, userId }) => {
                 gender: Gender.MASCULINO,
                 level: SkillLevel.PRO,
                 avatarUrl: '',
-                bio: 'Escreva algo sobre você...'
+                bio: 'Escreva algo sobre você...',
+                age: 25,
+                phone: ''
             });
         } else {
             setProfile({
@@ -48,7 +50,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ onBack, userId }) => {
                 gender: data.gender as any,
                 level: data.level as SkillLevel,
                 avatarUrl: data.avatar_url || '',
-                bio: data.bio || ''
+                bio: data.bio || '',
+                age: data.age || undefined,
+                phone: data.phone || ''
             });
             setPhotoPreview(data.avatar_url || null);
         }
@@ -96,6 +100,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({ onBack, userId }) => {
             gender: profile.gender,
             level: profile.level,
             bio: profile.bio,
+            age: profile.age,
+            phone: profile.phone,
             avatar_url: finalAvatarUrl,
             updated_at: new Date().toISOString()
         };
@@ -109,7 +115,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ onBack, userId }) => {
         if (upsertError) {
             console.error('Error saving profile:', upsertError);
             if (upsertError.message.includes('public.profiles') || upsertError.message.includes('schema cache')) {
-                alert('Erro: A tabela "profiles" não foi encontrada. Por favor, execute o arquivo "auth_setup.sql" no seu Editor SQL do Supabase.');
+                alert('Erro: A tabela "profiles" não foi encontrada ou precisa ser atualizada. Por favor, execute o arquivo "profile_fields_update.sql" no seu Editor SQL do Supabase.');
             } else {
                 alert(`Erro ao salvar perfil: ${upsertError.message}`);
             }
@@ -123,7 +129,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ onBack, userId }) => {
                     gender: data.gender as any,
                     level: data.level as SkillLevel,
                     avatarUrl: data.avatar_url || '',
-                    bio: data.bio || ''
+                    bio: data.bio || '',
+                    age: data.age || undefined,
+                    phone: data.phone || ''
                 });
             }
             onBack();
@@ -151,20 +159,20 @@ const ProfileView: React.FC<ProfileViewProps> = ({ onBack, userId }) => {
                 </div>
             </header>
 
-            <div className="px-4 pt-6 space-y-6">
+            <div className="px-4 pt-4 space-y-6">
                 {/* Photo Upload */}
                 <div className="flex flex-col items-center">
                     <label className="relative cursor-pointer group">
-                        <div className="h-32 w-32 rounded-[40px] bg-slate-100 dark:bg-card-dark flex items-center justify-center text-slate-400 overflow-hidden border-4 border-white dark:border-background-dark ios-shadow-lg">
+                        <div className="h-28 w-28 rounded-[36px] bg-slate-100 dark:bg-card-dark flex items-center justify-center text-slate-400 overflow-hidden border-4 border-white dark:border-background-dark ios-shadow-lg">
                             {photoPreview ? (
                                 <img src={photoPreview} alt="Profile" className="h-full w-full object-cover" />
                             ) : (
-                                <span className="material-symbols-outlined text-5xl">person</span>
+                                <span className="material-symbols-outlined text-4xl">person</span>
                             )}
                         </div>
                         <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
-                        <div className="absolute -bottom-2 -right-2 bg-primary text-background-dark h-10 w-10 rounded-full flex items-center justify-center border-4 border-white dark:border-background-dark ios-shadow">
-                            <span className="material-symbols-outlined text-[20px]">add_a_photo</span>
+                        <div className="absolute -bottom-2 -right-2 bg-primary text-background-dark h-9 w-9 rounded-full flex items-center justify-center border-4 border-white dark:border-background-dark ios-shadow">
+                            <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
                         </div>
                     </label>
                 </div>
@@ -177,7 +185,31 @@ const ProfileView: React.FC<ProfileViewProps> = ({ onBack, userId }) => {
                             value={profile?.name}
                             onChange={(e) => setProfile(prev => prev ? { ...prev, name: e.target.value } : null)}
                             className="w-full bg-white dark:bg-card-dark border-none rounded-2xl text-sm focus:ring-2 focus:ring-primary py-4 px-4 ios-shadow"
+                            placeholder="Como quer ser chamado?"
                         />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider ml-1">Idade</label>
+                            <input
+                                type="number"
+                                value={profile?.age || ''}
+                                onChange={(e) => setProfile(prev => prev ? { ...prev, age: parseInt(e.target.value) || undefined } : null)}
+                                className="w-full bg-white dark:bg-card-dark border-none rounded-2xl text-sm focus:ring-2 focus:ring-primary py-4 px-4 ios-shadow"
+                                placeholder="Sua idade"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider ml-1">Telefone / WhatsApp</label>
+                            <input
+                                type="tel"
+                                value={profile?.phone || ''}
+                                onChange={(e) => setProfile(prev => prev ? { ...prev, phone: e.target.value } : null)}
+                                className="w-full bg-white dark:bg-card-dark border-none rounded-2xl text-sm focus:ring-2 focus:ring-primary py-4 px-4 ios-shadow"
+                                placeholder="(00) 00000-0000"
+                            />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -204,9 +236,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ onBack, userId }) => {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Bio / Descrição</label>
+                        <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider ml-1">Bio / Descrição</label>
                         <textarea
-                            rows={4}
+                            rows={3}
                             value={profile?.bio}
                             onChange={(e) => setProfile(prev => prev ? { ...prev, bio: e.target.value } : null)}
                             className="w-full bg-white dark:bg-card-dark border-none rounded-2xl text-sm focus:ring-2 focus:ring-primary py-4 px-4 ios-shadow resize-none"
@@ -218,14 +250,14 @@ const ProfileView: React.FC<ProfileViewProps> = ({ onBack, userId }) => {
                 <button
                     onClick={saveProfile}
                     disabled={saving}
-                    className="w-full bg-primary text-background-dark font-bold py-4 rounded-2xl mt-8 ios-shadow active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full bg-primary text-background-dark font-bold py-4 rounded-2xl mt-4 ios-shadow active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                     {saving ? (
                         <span className="animate-spin material-symbols-outlined">sync</span>
                     ) : (
                         <>
                             <span className="material-symbols-outlined">save</span>
-                            Salvar Alterações
+                            Salvar Perfil
                         </>
                     )}
                 </button>

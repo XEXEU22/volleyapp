@@ -13,8 +13,17 @@ const LoginView: React.FC<LoginViewProps> = ({ onSuccess }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [rememberMe, setRememberMe] = useState(true);
+
+    React.useEffect(() => {
+        const savedEmail = localStorage.getItem('remembered_email');
+        if (savedEmail) {
+            setEmail(savedEmail);
+        }
+    }, []);
 
     const handleAuth = async (e: React.FormEvent) => {
+
         e.preventDefault();
         setLoading(true);
 
@@ -25,7 +34,15 @@ const LoginView: React.FC<LoginViewProps> = ({ onSuccess }) => {
                     password,
                 });
                 if (error) throw error;
+
+                if (rememberMe) {
+                    localStorage.setItem('remembered_email', email);
+                } else {
+                    localStorage.removeItem('remembered_email');
+                }
+
                 onSuccess(false);
+
             } else {
                 const { data: authData, error: authError } = await supabase.auth.signUp({
                     email,
@@ -70,8 +87,8 @@ const LoginView: React.FC<LoginViewProps> = ({ onSuccess }) => {
         <div className="min-h-screen flex items-center justify-center p-6 bg-background-light dark:bg-background-dark animate-in fade-in duration-500">
             <div className="w-full max-w-sm">
                 <div className="text-center mb-10">
-                    <div className="inline-flex items-center justify-center h-20 w-20 rounded-[32px] bg-primary/20 text-primary mb-4 ios-shadow">
-                        <span className="material-symbols-outlined text-4xl">sports_volleyball</span>
+                    <div className="inline-flex items-center justify-center mb-6 drop-shadow-2xl">
+                        <img src="/app_icon.svg" alt="Lets Vôlei Icon" className="h-24 w-24 rounded-[32px] ios-shadow" />
                     </div>
                     <h1 className="text-3xl font-extrabold tracking-tight">Lets Vôlei</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-2">Sua pelada, suas regras.</p>
@@ -119,7 +136,23 @@ const LoginView: React.FC<LoginViewProps> = ({ onSuccess }) => {
                             />
                         </div>
 
+                        {isLogin && (
+                            <div className="flex items-center gap-2 ml-1">
+                                <input
+                                    id="remember"
+                                    type="checkbox"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                    className="w-4 h-4 rounded border-slate-200 dark:border-slate-800 text-primary focus:ring-primary bg-slate-50 dark:bg-background-dark appearance-none checked:bg-primary transition-all relative after:content-['✓'] after:absolute after:text-[10px] after:text-white after:top-[-1px] after:left-[2.5px] after:hidden checked:after:block cursor-pointer flex-shrink-0"
+                                />
+                                <label htmlFor="remember" className="text-sm font-medium text-slate-500 cursor-pointer select-none">
+                                    Lembrar e-mail
+                                </label>
+                            </div>
+                        )}
+
                         <button
+
                             type="submit"
                             disabled={loading}
                             className="w-full bg-primary text-background-dark font-bold py-4 rounded-2xl mt-4 ios-shadow active:scale-95 transition-all flex items-center justify-center gap-2"

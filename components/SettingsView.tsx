@@ -5,10 +5,11 @@ import { Player } from '../types';
 interface SettingsViewProps {
   players: Player[];
   onProfileClick: () => void;
+  onStatsClick: () => void;
   onLogout?: () => void;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ players, onProfileClick, onLogout }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ players, onProfileClick, onStatsClick, onLogout }) => {
   const [isDark, setIsDark] = useState(
     document.documentElement.classList.contains('dark') ||
     localStorage.getItem('theme') === 'dark'
@@ -42,6 +43,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ players, onProfileClick, on
 
   const menuItems = [
     { icon: 'person', label: 'Meu Perfil', sub: 'Editar informações', action: onProfileClick },
+    { icon: 'analytics', label: 'Estatísticas', sub: 'Dados e desempenho', action: onStatsClick },
     { icon: 'download', label: 'Exportar Elenco', sub: 'Baixar JSON dos atletas', action: exportPlayers },
     { icon: 'help', label: 'Ajuda', sub: 'Suporte e FAQ', action: () => window.open('https://github.com', '_blank') },
   ];
@@ -97,9 +99,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ players, onProfileClick, on
         <p className="font-bold">Sair do App</p>
       </div>
 
-      <p className="text-center text-[10px] text-slate-400 mt-8">
-        Lets Vôlei v1.0.6 • Desenvolvido com ❤️
-      </p>
+      <div className="mt-8 flex flex-col items-center gap-2 opacity-40">
+        <img src="/app_icon.svg" alt="" className="h-6 w-6 rounded-md grayscale" />
+        <p className="text-center text-[10px] text-slate-400">
+          Lets Vôlei v1.0.6 • Desenvolvido com ❤️
+        </p>
+      </div>
     </div>
   );
 };

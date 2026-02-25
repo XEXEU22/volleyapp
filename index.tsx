@@ -16,6 +16,44 @@ if (!rootElement) {
 
 const root = ReactDOM.createRoot(rootElement);
 
+// Global Error Handler for unhandled errors
+window.onerror = (message, source, lineno, colno, error) => {
+  console.error("Global Error Captured:", { message, source, lineno, colno, error });
+  renderError(error || new Error(String(message)));
+};
+
+function renderError(error: any) {
+  root.render(
+    <div style={{
+      padding: '20px',
+      color: 'white',
+      background: '#FF3B3B',
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: 'sans-serif',
+      textAlign: 'center'
+    }}>
+      <h1 style={{ fontSize: '24px', marginBottom: '10px' }}>⚠️ Erro Crítico</h1>
+      <p style={{ maxWidth: '400px', lineHeight: '1.5' }}>
+        {error.message || "Ocorreu um erro inesperado."}
+      </p>
+      <div style={{ marginTop: '20px', textAlign: 'left', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', fontSize: '11px', width: '100%', maxWidth: '300px', overflowX: 'auto' }}>
+        <code style={{ whiteSpace: 'pre-wrap' }}>{error.stack || "Sem detalhes da pilha de erro."}</code>
+      </div>
+      <button
+        onClick={() => window.location.reload()}
+        style={{ marginTop: '20px', padding: '10px 20px', background: 'white', color: '#FF3B3B', border: 'none', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer' }}
+      >
+        Recarregar App
+      </button>
+    </div>
+  );
+}
+
+
 try {
   // Diagnostic: Check for critical env vars before rendering
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;

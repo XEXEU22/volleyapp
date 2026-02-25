@@ -11,6 +11,8 @@ import ProfileView from './components/ProfileView';
 import BottomNav from './components/BottomNav';
 import AddPlayerModal from './components/AddPlayerModal';
 import LoginView from './components/LoginView';
+import DownloadView from './components/DownloadView';
+import FinanceView from './components/FinanceView';
 
 // Convert DB row to Player object
 const rowToPlayer = (row: any): Player => ({
@@ -53,12 +55,20 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ViewType>('players');
   const [players, setPlayers] = useState<Player[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [authTimeout, setAuthTimeout] = useState(false);
 
   useEffect(() => {
-    // Initial session check
+    // Set a timeout for auth loading (8 seconds)
+    const timeout = setTimeout(() => {
+      if (authLoading) {
+        setAuthTimeout(true);
+      }
+    }, 8000);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setAuthLoading(false);
@@ -82,8 +92,12 @@ const App: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
+
 
   useEffect(() => {
     if (session) {
@@ -101,16 +115,15 @@ const App: React.FC = () => {
 
     if (error) {
       console.error('Error fetching players:', error);
-      // Fallback to initial data if table doesn't exist yet but it shouldn't happen now
     } else {
       setPlayers(data.map(rowToPlayer));
     }
     setLoading(false);
   };
 
-  const addPlayer = async (newPlayer: Player, photo?: File) => {
+  const savePlayer = async (playerToSave: Player, photo?: File) => {
     if (!session) return;
-    let finalAvatarUrl = newPlayer.avatarUrl;
+    let finalAvatarUrl = playerToSave.avatarUrl;
 
     if (photo) {
       const fileExt = photo.name.split('.').pop();
@@ -129,20 +142,32 @@ const App: React.FC = () => {
       }
     }
 
-    const row = playerToRow({ ...newPlayer, avatarUrl: finalAvatarUrl, user_id: session.user.id });
+    const row = {
+      ...playerToRow({ ...playerToSave, avatarUrl: finalAvatarUrl, user_id: session.user.id }),
+      id: playerToSave.id
+    };
+
     const { data, error } = await supabase
       .from('players')
-      .insert(row)
+      .upsert(row)
       .select()
       .single();
 
     if (error) {
-      console.error('Error adding player:', error);
-      alert(`Erro ao adicionar: ${error.message}`);
+      console.error('Error saving player:', error);
+      alert(`Erro ao salvar: ${error.message}`);
     } else {
-      setPlayers(prev => [rowToPlayer(data), ...prev]);
+      const savedPlayer = rowToPlayer(data);
+      setPlayers(prev => {
+        const exists = prev.find(p => p.id === savedPlayer.id);
+        if (exists) {
+          return prev.map(p => p.id === savedPlayer.id ? savedPlayer : p);
+        }
+        return [savedPlayer, ...prev];
+      });
     }
     setIsAddModalOpen(false);
+    setEditingPlayer(null);
   };
 
   const removePlayer = async (id: string) => {
@@ -160,6 +185,11 @@ const App: React.FC = () => {
     }
   };
 
+  const handleEditPlayer = (player: Player) => {
+    setEditingPlayer(player);
+    setIsAddModalOpen(true);
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
@@ -167,15 +197,32 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (authLoading) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
-          <span className="material-symbols-outlined animate-spin text-primary text-4xl">sync</span>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-background-light dark:bg-background-dark p-6 text-center">
+          <span className="material-symbols-outlined animate-spin text-primary text-4xl mb-4">sync</span>
+          {authTimeout && (
+            <div className="animate-in fade-in duration-700">
+              <p className="text-slate-500 dark:text-slate-400 mb-4">
+                O carregamento está demorando mais que o esperado...
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-primary text-white rounded-full font-bold text-sm"
+              >
+                Tentar Novamente
+              </button>
+            </div>
+          )}
         </div>
       );
     }
 
+
     if (!session) {
       return <LoginView onSuccess={(isNewUser) => {
-        if (isNewUser) setIsAddModalOpen(true);
+        if (isNewUser) {
+          setEditingPlayer(null);
+          setIsAddModalOpen(true);
+        }
       }} />;
     }
 
@@ -183,20 +230,37 @@ const App: React.FC = () => {
       case 'players':
         return <PlayersView
           players={players}
-          onAddClick={() => setIsAddModalOpen(true)}
+          onAddClick={() => {
+            setEditingPlayer(null);
+            setIsAddModalOpen(true);
+          }}
           onRemove={removePlayer}
+          onEdit={handleEditPlayer}
           loading={loading}
         />;
       case 'draw':
         return <DrawView players={players} />;
       case 'stats':
         return <StatsView players={players} />;
+      case 'finance':
+        return <FinanceView players={players} userId={session.user.id} />;
       case 'settings':
-        return <SettingsView players={players} onProfileClick={() => setActiveTab('profile')} onLogout={handleLogout} />;
+        return <SettingsView players={players} onProfileClick={() => setActiveTab('profile')} onStatsClick={() => setActiveTab('stats')} onLogout={handleLogout} />;
+      case 'download':
+        return <DownloadView />;
       case 'profile':
         return <ProfileView onBack={() => setActiveTab('settings')} userId={session.user.id} />;
       default:
-        return <PlayersView players={players} onAddClick={() => setIsAddModalOpen(true)} onRemove={removePlayer} loading={loading} />;
+        return <PlayersView
+          players={players}
+          onAddClick={() => {
+            setEditingPlayer(null);
+            setIsAddModalOpen(true);
+          }}
+          onRemove={removePlayer}
+          onEdit={handleEditPlayer}
+          loading={loading}
+        />;
     }
   };
 
@@ -207,7 +271,8 @@ const App: React.FC = () => {
       </main>
 
       {session && (
-        <div className="fixed bottom-[90px] right-6 text-right pointer-events-none z-0">
+        <div className="fixed bottom-[90px] right-6 text-right pointer-events-none z-0 flex flex-col items-end gap-1">
+          <img src="/app_icon.svg" alt="" className="h-8 w-8 rounded-lg opacity-20 grayscale" />
           <h1 className="text-2xl font-black tracking-tighter text-primary/30 uppercase italic leading-none">Lets Vôlei</h1>
           <p className="text-[8px] text-slate-500/40 uppercase font-black tracking-[0.3em] mt-0.5">
             criador: Rafael Cesar
@@ -221,8 +286,12 @@ const App: React.FC = () => {
 
       <AddPlayerModal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAdd={addPlayer}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setEditingPlayer(null);
+        }}
+        onAdd={savePlayer}
+        initialPlayer={editingPlayer}
       />
     </div>
   );

@@ -49,6 +49,17 @@ export interface UserProfile {
   level: SkillLevel;
   avatarUrl: string;
   bio: string;
+  age?: number;
+  phone?: string;
+export interface Payment {
+  id: string;
+  player_id: string;
+  user_id: string;
+  month: number;
+  year: number;
+  is_paid: boolean;
+  amount?: number;
+  created_at?: string;
 }
 
-export type ViewType = 'players' | 'draw' | 'stats' | 'settings' | 'profile';
+export type ViewType = 'players' | 'draw' | 'stats' | 'settings' | 'profile' | 'download' | 'finance';

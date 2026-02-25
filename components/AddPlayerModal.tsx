@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Player, Gender, SkillLevel, PlayerSkills, SKILL_LABELS } from '../types';
 import SkillStars from './SkillStars';
 
@@ -7,6 +7,7 @@ interface AddPlayerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (player: Player, photo?: File) => void;
+  initialPlayer?: Player | null;
 }
 
 const DEFAULT_SKILLS: PlayerSkills = {
@@ -18,13 +19,30 @@ const DEFAULT_SKILLS: PlayerSkills = {
   bloqueio: 3,
 };
 
-const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ isOpen, onClose, onAdd }) => {
+const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ isOpen, onClose, onAdd, initialPlayer }) => {
   const [name, setName] = useState('');
   const [gender, setGender] = useState<Gender>(Gender.MASCULINO);
   const [level, setLevel] = useState<SkillLevel>(SkillLevel.PRO);
   const [skills, setSkills] = useState<PlayerSkills>({ ...DEFAULT_SKILLS });
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialPlayer) {
+      setName(initialPlayer.name);
+      setGender(initialPlayer.gender);
+      setLevel(initialPlayer.level);
+      setSkills({ ...initialPlayer.skills });
+      setPhotoPreview(initialPlayer.avatarUrl);
+    } else {
+      setName('');
+      setGender(Gender.MASCULINO);
+      setLevel(SkillLevel.PRO);
+      setSkills({ ...DEFAULT_SKILLS });
+      setPhotoPreview(null);
+    }
+    setPhoto(null);
+  }, [initialPlayer, isOpen]);
 
   if (!isOpen) return null;
 
@@ -52,8 +70,9 @@ const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ isOpen, onClose, onAdd 
     e.preventDefault();
     if (!name) return;
 
-    const newPlayer: Player = {
-      id: Math.random().toString(36).substr(2, 9),
+    const playerToSave: Player = {
+      id: initialPlayer ? initialPlayer.id : Math.random().toString(36).substr(2, 9),
+      user_id: initialPlayer?.user_id,
       name,
       gender,
       level,
@@ -63,11 +82,7 @@ const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ isOpen, onClose, onAdd 
       skills,
     };
 
-    onAdd(newPlayer, photo || undefined);
-    setName('');
-    setSkills({ ...DEFAULT_SKILLS });
-    setPhoto(null);
-    setPhotoPreview(null);
+    onAdd(playerToSave, photo || undefined);
   };
 
   return (
@@ -75,7 +90,7 @@ const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ isOpen, onClose, onAdd 
       <div className="bg-background-light dark:bg-card-dark w-full max-w-xs rounded-3xl overflow-hidden ios-shadow animate-in slide-in-from-bottom-4 duration-300 max-h-[90vh] flex flex-col">
         <div className="p-6 overflow-y-auto flex-1">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold">Novo Atleta</h2>
+            <h2 className="text-xl font-bold">{initialPlayer ? 'Editar Atleta' : 'Novo Atleta'}</h2>
             <button onClick={onClose} className="text-slate-400">
               <span className="material-symbols-outlined">close</span>
             </button>
@@ -99,7 +114,7 @@ const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ isOpen, onClose, onAdd 
                   className="hidden"
                 />
                 <div className="absolute -bottom-2 -right-2 bg-primary text-background-dark h-8 w-8 rounded-full flex items-center justify-center ios-shadow">
-                  <span className="material-symbols-outlined text-[18px]">edit</span>
+                  <span className="material-symbols-outlined text-[18px]">{photoPreview ? 'edit' : 'add'}</span>
                 </div>
               </label>
               <p className="text-[10px] font-bold text-slate-500 uppercase mt-3 tracking-widest">Foto do Atleta</p>
@@ -164,7 +179,7 @@ const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ isOpen, onClose, onAdd 
               type="submit"
               className="w-full bg-primary text-background-dark font-bold py-3 rounded-xl mt-4 ios-shadow active:scale-95 transition-transform"
             >
-              Adicionar Jogador
+              {initialPlayer ? 'Salvar Alterações' : 'Adicionar Jogador'}
             </button>
           </form>
         </div>

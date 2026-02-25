@@ -6,6 +6,7 @@ import SkillStars from './SkillStars';
 interface PlayerCardProps {
   player: Player;
   onRemove?: (id: string) => void;
+  onEdit?: (player: Player) => void;
 }
 
 const SKILL_COLORS: Record<keyof PlayerSkills, string> = {
@@ -17,7 +18,7 @@ const SKILL_COLORS: Record<keyof PlayerSkills, string> = {
   bloqueio: 'bg-cyan-500',
 };
 
-const PlayerCard: React.FC<PlayerCardProps> = ({ player, onRemove }) => {
+const PlayerCard: React.FC<PlayerCardProps> = ({ player, onRemove, onEdit }) => {
   const [expanded, setExpanded] = useState(false);
 
   const isIntermediario = player.level.includes('Intermediário');
@@ -77,14 +78,22 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ player, onRemove }) => {
           </span>
         </div>
 
-        {onRemove && (
+        <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
-            onClick={(e) => { e.stopPropagation(); onRemove(player.id); }}
-            className="absolute right-0 top-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity text-red-500"
+            onClick={(e) => { e.stopPropagation(); onEdit?.(player); }}
+            className="p-1.5 text-slate-400 hover:text-primary transition-colors"
           >
-            <span className="material-symbols-outlined text-sm">close</span>
+            <span className="material-symbols-outlined text-sm">edit</span>
           </button>
-        )}
+          {onRemove && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onRemove(player.id); }}
+              className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">close</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Expanded Skills Section */}

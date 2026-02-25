@@ -10,11 +10,11 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: "#FF3B3B", // Vibrant Red
-                "background-light": "#f6f8f7",
-                "background-dark": "#000000", // Pure Black
-                "card-dark": "#0F0F0F", // Deep charcoal for cards
-                "accent-orange": "#FF8C42"
+                primary: "#007AFF", // Original iOS Blue
+                "background-light": "#f2f2f7",
+                "background-dark": "#1c1c1e", // Original dark gray
+                "card-dark": "#2c2c2e", // Lighter card for dark mode
+                "accent-orange": "#FF9500" // Original iOS Orange
             },
             fontFamily: {
                 display: ["Lexend", "sans-serif"],

@@ -43,7 +43,7 @@ const StatsView: React.FC<StatsViewProps> = ({ players }) => {
     fullMark: 5,
   }));
 
-  const COLORS = ['#FF3B3B', '#ff8c42', '#3b82f6', '#8b5cf6', '#ec4899'];
+  const COLORS = ['#007AFF', '#ff8c42', '#3b82f6', '#8b5cf6', '#ec4899'];
 
   return (
     <div className="pb-32 px-4 pt-12 overflow-x-hidden">
@@ -88,8 +88,8 @@ const StatsView: React.FC<StatsViewProps> = ({ players }) => {
                 <Radar
                   name="Média"
                   dataKey="value"
-                  stroke="#FF3B3B"
-                  fill="#FF3B3B"
+                  stroke="#007AFF"
+                  fill="#007AFF"
                   fillOpacity={0.25}
                   strokeWidth={2}
                 />

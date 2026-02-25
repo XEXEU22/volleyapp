@@ -1,0 +1,28 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with rounded corners -->
+  <rect width="512" height="512" rx="114" fill="#0F0F0F"/>
+  
+  <!-- Subtle Gradient Overlay -->
+  <rect width="512" height="512" rx="114" fill="url(#paint0_radial)" fill-opacity="0.3"/>
+
+  <!-- Volleyball Core -->
+  <circle cx="256" cy="256" r="180" fill="#007AFF"/>
+  
+  <!-- Volleyball Patterns (Lines) -->
+  <path d="M120 200C180 160 260 160 320 200" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  <path d="M120 312C180 352 260 352 320 312" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  <path d="M256 76V160" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  <path d="M256 352V436" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  <path d="M76 256H160" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  <path d="M352 256H436" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  
+  <!-- "LV" Letters Stylized -->
+  <text x="256" y="275" font-family="Lexend, sans-serif" font-weight="900" font-size="80" fill="white" text-anchor="middle" dominant-baseline="middle">LV</text>
+
+  <defs>
+    <radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 256) rotate(90) scale(256)">
+      <stop stop-color="#007AFF"/>
+      <stop offset="1" stop-color="#1C1C1E" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>
