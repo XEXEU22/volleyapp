@@ -76,3 +76,12 @@ export interface CashTransaction {
 }
 
 export type ViewType = 'players' | 'draw' | 'stats' | 'settings' | 'profile' | 'download' | 'finance';
+
+export interface HistoryItem {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  type: 'income' | 'expense';
+  category: 'Pagamento' | 'Retirada' | 'Depósito' | 'Geral';
+}

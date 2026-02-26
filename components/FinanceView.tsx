@@ -24,8 +24,70 @@ const FinanceView: React.FC<FinanceViewProps> = ({ players, userId }) => {
     const [loading, setLoading] = useState(true);
     const [savingId, setSavingId] = useState<string | null>(null);
     const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+    const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
     const [withdrawAmount, setWithdrawAmount] = useState('');
     const [withdrawDesc, setWithdrawDesc] = useState('');
+    const [historyItems, setHistoryItems] = useState<any[]>([]);
+
+    const fetchHistory = async () => {
+        try {
+            // Fetch all successful payments
+            const { data: paymentsData, error: payError } = await supabase
+                .from('member_payments')
+                .select(`
+                    id,
+                    amount,
+                    created_at,
+                    player_id,
+                    month,
+                    year,
+                    players (name)
+                `)
+                .eq('user_id', userId)
+                .eq('is_paid', true);
+
+            if (payError) throw payError;
+
+            // Fetch all cash transactions
+            const { data: transData, error: transError } = await supabase
+                .from('cash_transactions')
+                .select('*')
+                .eq('user_id', userId);
+
+            if (transError) throw transError;
+
+            const items: any[] = [];
+
+            paymentsData?.forEach(p => {
+                items.push({
+                    id: p.id,
+                    date: p.created_at,
+                    description: `Mensalidade: ${(p.players as any)?.name || 'Jogador'} (${MONTHS[p.month - 1]}/${p.year})`,
+                    amount: p.amount,
+                    type: 'income',
+                    category: 'Pagamento'
+                });
+            });
+
+            transData?.forEach(t => {
+                items.push({
+                    id: t.id,
+                    date: t.created_at,
+                    description: t.description,
+                    amount: t.amount,
+                    type: t.type === 'deposit' ? 'income' : 'expense',
+                    category: t.type === 'deposit' ? 'Depósito' : 'Retirada'
+                });
+            });
+
+            // Sort by date descending
+            items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            setHistoryItems(items);
+        } catch (error) {
+            console.error('Error fetching history:', error);
+            alert('Erro ao carregar histórico');
+        }
+    };
 
     const fetchData = async () => {
         setLoading(true);
@@ -177,12 +239,24 @@ const FinanceView: React.FC<FinanceViewProps> = ({ players, userId }) => {
 
             <div className="px-4 py-6">
                 {/* Global Caixa Summary */}
-                <div className="bg-primary p-6 rounded-3xl ios-shadow mb-8 relative overflow-hidden">
-                    <div className="relative z-10">
-                        <p className="text-[10px] font-black uppercase text-white/60 mb-1">Caixa Geral (Saldo Total)</p>
-                        <p className="text-4xl font-black text-white">R$ {totalCash.toFixed(2).replace('.', ',')}</p>
+                <div
+                    onClick={() => {
+                        console.log('Caixa card clicked');
+                        setIsHistoryModalOpen(true);
+                        fetchHistory();
+                    }}
+                    className="bg-primary p-6 rounded-3xl ios-shadow mb-8 relative overflow-hidden active:scale-95 transition-transform cursor-pointer pointer-events-auto"
+                >
+                    <div className="relative z-10 pointer-events-none">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-[10px] font-black uppercase text-white/60 mb-1">Caixa Geral (Saldo Total) <span className="ml-1 text-[8px] opacity-70">(Ver Histórico)</span></p>
+                                <p className="text-4xl font-black text-white">R$ {totalCash.toFixed(2).replace('.', ',')}</p>
+                            </div>
+                            <span className="material-symbols-outlined text-white/40">history</span>
+                        </div>
                     </div>
-                    <span className="material-symbols-outlined absolute -right-4 -bottom-4 text-8xl text-white/10 rotate-12">account_balance_wallet</span>
+                    <span className="material-symbols-outlined absolute -right-4 -bottom-4 text-8xl text-white/10 rotate-12 pointer-events-none">account_balance_wallet</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-8">
@@ -313,6 +387,53 @@ const FinanceView: React.FC<FinanceViewProps> = ({ players, userId }) => {
                             >
                                 Confirmar Retirada
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* History Modal */}
+            {isHistoryModalOpen && (
+                <div className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-card-dark w-full max-w-lg h-[85vh] sm:h-auto sm:max-h-[80vh] rounded-t-[32px] sm:rounded-[32px] p-8 ios-shadow flex flex-col relative">
+                        <div className="flex justify-between items-center mb-6 shrink-0">
+                            <div>
+                                <h3 className="text-xl font-black uppercase tracking-tighter">Histórico do Caixa</h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase">Todas as movimentações</p>
+                            </div>
+                            <button onClick={() => setIsHistoryModalOpen(false)} className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                            {historyItems.length > 0 ? (
+                                historyItems.map((item) => (
+                                    <div key={item.id} className="bg-slate-50 dark:bg-background-dark/50 p-4 rounded-2xl flex justify-between items-center border border-slate-100 dark:border-slate-800">
+                                        <div className="flex flex-col">
+                                            <span className="text-[8px] font-black uppercase text-slate-400 mb-1">
+                                                {new Date(item.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                            <span className="text-xs font-bold text-slate-800 dark:text-white line-clamp-1">{item.description}</span>
+                                            <span className={`text-[8px] font-black uppercase mt-1 px-2 py-0.5 rounded-full w-fit ${item.category === 'Pagamento' ? 'bg-primary/10 text-primary' :
+                                                item.category === 'Retirada' ? 'bg-rose-500/10 text-rose-500' :
+                                                    'bg-blue-500/10 text-blue-500'
+                                                }`}>
+                                                {item.category}
+                                            </span>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className={`text-sm font-black ${item.type === 'income' ? 'text-primary' : 'text-rose-500'}`}>
+                                                {item.type === 'income' ? '+' : '-'} R$ {item.amount.toFixed(2).replace('.', ',')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="py-20 text-center">
+                                    <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-700">history_toggle_off</span>
+                                    <p className="mt-2 text-slate-400 text-xs font-bold uppercase">Nenhuma movimentação encontrada</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
