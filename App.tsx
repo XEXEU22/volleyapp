@@ -142,16 +142,32 @@ const App: React.FC = () => {
       }
     }
 
-    const row = {
-      ...playerToRow({ ...playerToSave, avatarUrl: finalAvatarUrl, user_id: session.user.id }),
-      id: playerToSave.id
-    };
+    const rowData = playerToRow({ ...playerToSave, avatarUrl: finalAvatarUrl, user_id: session.user.id });
 
-    const { data, error } = await supabase
-      .from('players')
-      .upsert(row)
-      .select()
-      .single();
+    // Check if this is an existing player (has a valid UUID from DB)
+    const isEditing = editingPlayer && editingPlayer.id === playerToSave.id;
+
+    let data, error;
+    if (isEditing) {
+      // Update existing player
+      const result = await supabase
+        .from('players')
+        .update(rowData)
+        .eq('id', playerToSave.id)
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    } else {
+      // Insert new player — let DB generate UUID
+      const result = await supabase
+        .from('players')
+        .insert(rowData)
+        .select()
+        .single();
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) {
       console.error('Error saving player:', error);

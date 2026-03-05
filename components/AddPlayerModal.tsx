@@ -71,7 +71,7 @@ const AddPlayerModal: React.FC<AddPlayerModalProps> = ({ isOpen, onClose, onAdd,
     if (!name) return;
 
     const playerToSave: Player = {
-      id: initialPlayer ? initialPlayer.id : Math.random().toString(36).substr(2, 9),
+      id: initialPlayer ? initialPlayer.id : crypto.randomUUID(),
       user_id: initialPlayer?.user_id,
       name,
       gender,
